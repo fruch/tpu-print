@@ -1,0 +1,67 @@
+{
+ "bed_temperature": [
+  "50"
+ ],
+ "filament_cost": [
+  "25"
+ ],
+ "filament_density": [
+  "1.21"
+ ],
+ "filament_diameter": [
+  "1.75"
+ ],
+ "filament_extruder_variant": [
+  "Direct Drive Standard"
+ ],
+ "filament_flow_ratio": [
+  "1"
+ ],
+ "filament_max_volumetric_speed": [
+  "4"
+ ],
+ "filament_notes": [
+  "CC3D TPU 98A 340M, skin colour, 1.75mm. Artillery Genius Pro (DIRECT DRIVE).\n\nVendor sheet: nozzle 195-215C, bed 0-60C.\n\nDirect drive, so it sits between the Bowden Ender and the H2S: shorter\nretraction than the Ender, lower max flow than the H2S. The stock machine\npreset retracts 1mm, which is already a direct-drive value.\n\n=== PENDING - fill in after physical calibration ===\nnozzle_temperature            215   PENDING  <- temp tower 225-195C / 5C steps\nfilament_flow_ratio           1.0   PENDING  <- flow tower\nfilament_max_volumetric_speed 4.0   PENDING  <- expect 3-6 mm3/s on this extruder\nfilament_retraction_length    1.0   PENDING  <- retraction tower, expect 0.5-1.5mm\npressure advance                    SKIP     <- stock Marlin has LIN_ADVANCE off\n\nValues above are generic/vendor starting points, NOT measured.\n\nfilament_density 1.21 g/cm3 is the generic polyester-TPU figure, not a CC3D\npublished spec. It only scales the 'filament used [g]' estimate."
+ ],
+ "filament_retraction_length": [
+  "1"
+ ],
+ "filament_retraction_speed": [
+  "25"
+ ],
+ "filament_settings_id": [
+  "CC3D TPU 98A Skin @GeniusPro"
+ ],
+ "filament_type": [
+  "TPU"
+ ],
+ "filament_vendor": [
+  "CC3D"
+ ],
+ "filament_wipe": [
+  "1"
+ ],
+ "filament_z_hop": [
+  "0.4"
+ ],
+ "filament_z_hop_types": [
+  "Normal Lift"
+ ],
+ "from": "User",
+ "hot_plate_temp": [
+  "50"
+ ],
+ "hot_plate_temp_initial_layer": [
+  "50"
+ ],
+ "inherits": "Artillery Generic TPU",
+ "name": "CC3D TPU 98A Skin @GeniusPro",
+ "nozzle_temperature": [
+  "215"
+ ],
+ "nozzle_temperature_initial_layer": [
+  "215"
+ ],
+ "type": "filament",
+ "version": "2.4.0.2"
+}

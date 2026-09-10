@@ -1,7 +1,7 @@
 # TPU calibration — quick flow per printer
 
 **Filament:** CC3D TPU 98A 340M, skin colour, 1.75 mm
-**Printers:** Creality Ender 3 Pro (Bowden) · Bambu Lab H2S (direct drive)
+**Printers:** Creality Ender 3 Pro (Bowden) · Artillery Genius Pro (direct drive) · Bambu Lab H2S (direct drive)
 
 Do all calibration in **OrcaSlicer**. Bambu Studio has no Calibration menu.
 Orca is a Bambu Studio fork, so the filament fields map 1:1 and you can copy
@@ -101,6 +101,43 @@ Then it is not temperature. In order of likelihood:
 
 ---
 
+## Artillery Genius Pro
+
+Direct drive on a bed-slinger, so it sits between the other two: shorter
+retraction than the Bowden Ender, lower max flow than the H2S. Bed is
+220 × 220 × 250 mm, the same as the Ender.
+
+### Hardware first
+
+- Direct drive, so none of the Ender's Bowden problems apply.
+- Still a bed-slinger: a tall thin tower whips at speed. `calibrate.sh` already
+  drops travel to 80 mm/s and adds a brim.
+
+### Orca setup
+
+- Printer: `Artillery Genius Pro 0.4 nozzle`
+- Filament: `CC3D TPU 98A Skin @GeniusPro`
+- Process: `0.20mm Standard @Artillery Genius Pro`
+
+### Order
+
+| # | Test | Range | Expect |
+|---|---|---|---|
+| 1 | first layer | — | run before anything else |
+| 2 | Temperature | 225 → 195 °C | or reuse another machine's result |
+| 3 | Flow ratio tower | 90 → 115% | — |
+| 4 | Retraction tower | 0.5 → 2.0 mm | lands 0.5–1.5 mm |
+| 5 | Max flow tower | 40 → 140% of 8 mm³/s | lands 3–6 mm³/s |
+
+**Pressure advance: skip.** Stock Marlin here ships with `LIN_ADVANCE` off, same
+as the Ender, so the pattern would be meaningless.
+
+**Same `G92 E0` quirk as the Ender.** The Artillery preset chain never sets
+`use_relative_e_distances` and leaves `layer_change_gcode` empty, so Orca
+refuses to slice from the CLI without it. `run.sh` and `calibrate.sh` inject it.
+
+---
+
 ## Bambu Lab H2S
 
 ### Hardware first
@@ -176,8 +213,8 @@ consistently.
 | Nozzle temperature | **Yes** — run the tower once, reuse |
 | Flow ratio | Usually — re-verify with Pass 2 |
 | Pressure advance | No |
-| Retraction length | No — 2–3 mm Bowden vs 0.4–0.8 mm direct drive |
-| Max volumetric speed | No — ~3 mm³/s vs ~10 mm³/s |
+| Retraction length | No — ~2.5 mm Bowden, ~1 mm Genius Pro, ~0.6 mm H2S |
+| Max volumetric speed | No — ~3, ~4 and ~10 mm³/s respectively |
 
 Run steps 3–5 separately on each printer. Only step 1 is shared.
 

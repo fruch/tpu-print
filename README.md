@@ -145,14 +145,18 @@ wall to hide under-extrusion, so the flow and retraction calibration in
 
 ## Printers
 
-| | Ender 3 Pro | H2S |
-|---|---|---|
-| Bed | 220 × 220 × 250 mm | 340 × 320 × 340 mm |
-| Extruder | Bowden | Direct drive |
-| Orca machine preset | `Creality Ender-3 Pro 0.4 nozzle` | `Bambu Lab H2S 0.4 nozzle` |
-| Orca process preset | `0.20mm Standard @Creality Ender3 Pro 0.4` | `0.20mm Standard @BBL H2S` |
-| Filament preset | `CC3D TPU 98A Skin @Ender3Pro` | `CC3D TPU 98A Skin @H2S` |
-| Bambu Studio | — (not supported) | `CC3D TPU 98A Skin` |
+| | Ender 3 Pro | Artillery Genius Pro | H2S |
+|---|---|---|---|
+| Bed | 220 × 220 × 250 mm | 220 × 220 × 250 mm | 340 × 320 × 340 mm |
+| Extruder | Bowden | Direct drive | Direct drive |
+| Orca machine preset | `Creality Ender-3 Pro 0.4 nozzle` | `Artillery Genius Pro 0.4 nozzle` | `Bambu Lab H2S 0.4 nozzle` |
+| Orca process preset | `0.20mm Standard @Creality Ender3 Pro 0.4` | `0.20mm Standard @Artillery Genius Pro` | `0.20mm Standard @BBL H2S` |
+| Filament preset | `CC3D TPU 98A Skin @Ender3Pro` | `CC3D TPU 98A Skin @GeniusPro` | `CC3D TPU 98A Skin @H2S` |
+| Retraction range tested | 1.5–3.0 mm | 0.5–2.0 mm | 0.2–0.8 mm |
+| Max flow ceiling swept | 5 mm³/s | 8 mm³/s | 16 mm³/s |
+| Bambu Studio | — (not supported) | — (not supported) | `CC3D TPU 98A Skin` |
+
+`PRINTERS=geniuspro ./calibrate.sh` limits a run to one machine.
 
 ---
 
@@ -161,13 +165,14 @@ wall to hide under-extrusion, so the flow and retraction calibration in
 These are all worked around in `run.sh`; documented so the workarounds aren't
 mistaken for cargo cult.
 
-**1. The Ender chain never sets `use_relative_e_distances`.**
+**1. Neither the Ender nor the Genius Pro chain sets `use_relative_e_distances`.**
 Orca falls back to relative E while `layer_change_gcode` is empty, and refuses:
 
 > Relative extruder addressing requires resetting the extruder position at each
 > layer to prevent loss of floating point accuracy. Add "G92 E0" to layer_gcode.
 
-Fixed by passing `--layer-change-gcode $'G92 E0\n'` on the Ender command only.
+Fixed by passing `--layer-change-gcode $'G92 E0\n'` on those two machines. The
+BBL chain sets it properly and does not need the workaround.
 
 **2. Don't pre-flatten the `inherits` chain.** Orca resolves `inherits` itself
 from the datadir. Handing it a flattened preset fails compatibility validation

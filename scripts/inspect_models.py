@@ -14,6 +14,7 @@ from collections import defaultdict
 # name -> (x, y, z) in mm
 PRINTERS = {
     "ender3pro": (220.0, 220.0, 250.0),
+    "geniuspro": (220.0, 220.0, 250.0),
     "h2s": (340.0, 320.0, 340.0),
 }
 
