@@ -1,0 +1,64 @@
+{
+ "filament_cost": [
+  "25"
+ ],
+ "filament_density": [
+  "1.21"
+ ],
+ "filament_diameter": [
+  "1.75"
+ ],
+ "filament_extruder_variant": [
+  "Direct Drive Standard"
+ ],
+ "filament_flow_ratio": [
+  "1"
+ ],
+ "filament_max_volumetric_speed": [
+  "3.2"
+ ],
+ "filament_notes": [
+  "CC3D TPU 98A 340M, skin color, 1.75mm. Creality Ender-3 Pro (BOWDEN).\n\nVendor sheet: nozzle 195-215C, bed 0-60C.\n\n=== PENDING - fill in after physical calibration ===\nnozzle_temperature            215   PENDING  <- temp tower 200-235C / 5C steps\nfilament_flow_ratio           1.0   PENDING  <- flow pass1 then pass2\nfilament_max_volumetric_speed 3.2   PENDING  <- expect 2-3 mm3/s on Bowden\nfilament_retraction_length    2.5   PENDING  <- retraction tower, expect 2-3mm @ 25mm/s\n                                              2.5 is a sane Bowden-TPU START so the temp\n                                              tower is readable; the machine default 4mm\n                                              is a PLA value and makes TPU string badly.\npressure advance                    SKIP     <- stock Creality 4.2.2 Marlin has LIN_ADVANCE off\n\nValues above are generic/vendor starting points, NOT measured. Do not trust\nestimates from these until the PENDING lines are replaced with real numbers.\n\nfilament_density 1.21 g/cm3 is the generic polyester-TPU figure, not a CC3D\npublished spec. It only scales the 'filament used [g]' estimate. Weigh a\nprinted part and correct it if the gram numbers matter to you.\nfilament_cost 25 is a placeholder - set your actual spool price."
+ ],
+ "filament_retraction_length": [
+  "2.5"
+ ],
+ "filament_retraction_speed": [
+  "25"
+ ],
+ "filament_settings_id": [
+  "CC3D TPU 98A Skin @Ender3Pro"
+ ],
+ "filament_type": [
+  "TPU"
+ ],
+ "filament_vendor": [
+  "CC3D"
+ ],
+ "filament_wipe": [
+  "1"
+ ],
+ "filament_z_hop": [
+  "0.4"
+ ],
+ "filament_z_hop_types": [
+  "Normal Lift"
+ ],
+ "from": "User",
+ "hot_plate_temp": [
+  "50"
+ ],
+ "hot_plate_temp_initial_layer": [
+  "50"
+ ],
+ "inherits": "Generic TPU @System",
+ "name": "CC3D TPU 98A Skin @Ender3Pro",
+ "nozzle_temperature": [
+  "215"
+ ],
+ "nozzle_temperature_initial_layer": [
+  "215"
+ ],
+ "type": "filament",
+ "version": "2.4.0.2"
+}

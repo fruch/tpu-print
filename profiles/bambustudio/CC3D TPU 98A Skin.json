@@ -1,0 +1,36 @@
+{
+    "filament_cost": [
+        "25"
+    ],
+    "filament_density": [
+        "1.21"
+    ],
+    "filament_extruder_variant": [
+        "Direct Drive Standard",
+        "Direct Drive High Flow",
+        "Direct Drive E3D High Flow"
+    ],
+    "filament_max_volumetric_speed": [
+        "7.5",
+        "nil",
+        "nil"
+    ],
+    "filament_settings_id": [
+        "CC3D TPU 98A Skin"
+    ],
+    "from": "User",
+    "inherits": "Generic TPU @BBL H2S",
+    "name": "CC3D TPU 98A Skin",
+    "nozzle_temperature": [
+        "215",
+        "nil",
+        "nil"
+    ],
+    "nozzle_temperature_initial_layer": [
+        "215",
+        "nil",
+        "nil"
+    ],
+    "type": "filament",
+    "version": "2.8.0.6"
+}

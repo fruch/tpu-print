@@ -1,0 +1,60 @@
+{
+ "filament_cost": [
+  "25",
+  "25"
+ ],
+ "filament_density": [
+  "1.21",
+  "1.21"
+ ],
+ "filament_diameter": [
+  "1.75"
+ ],
+ "filament_extruder_variant": [
+  "Direct Drive Standard",
+  "Direct Drive High Flow"
+ ],
+ "filament_flow_ratio": [
+  "1",
+  "1"
+ ],
+ "filament_max_volumetric_speed": [
+  "7.5",
+  "7.5"
+ ],
+ "filament_notes": [
+  "CC3D TPU 98A 340M, skin color, 1.75mm. Bambu Lab H2S (DIRECT DRIVE).\n\nVendor sheet: nozzle 195-215C, bed 0-60C.\nRun from the EXTERNAL spool holder, not AMS 2 Pro. Do not heat the chamber.\n\n=== PENDING - fill in after physical calibration ===\nnozzle_temperature            215   PENDING  <- temp tower 200-235C / 5C steps (transfers from Ender)\nfilament_flow_ratio           1.0   PENDING  <- flow pass1 then pass2\nfilament_max_volumetric_speed 7.5   PENDING  <- expect 8-12 mm3/s; 7.5 matches the\n                                              Bambu Studio preset so the two slicers\n                                              stay comparable. Still not measured.\nfilament_retraction_length    0.4   PENDING  <- retraction tower, expect 0.4-0.8mm\npressure advance                    AUTO     <- H2S self-calibrates PA, leave it alone\n\nValues above are generic/vendor starting points, NOT measured. Do not trust\nestimates from these until the PENDING lines are replaced with real numbers.\n\nfilament_density 1.21 g/cm3 is the generic polyester-TPU figure, not a CC3D\npublished spec. It only scales the 'filament used [g]' estimate. Weigh a\nprinted part and correct it if the gram numbers matter to you.\nfilament_cost 25 is a placeholder - set your actual spool price."
+ ],
+ "filament_retraction_length": [
+  "nil",
+  "0.4"
+ ],
+ "filament_settings_id": [
+  "CC3D TPU 98A Skin @H2S"
+ ],
+ "filament_type": [
+  "TPU"
+ ],
+ "filament_vendor": [
+  "CC3D"
+ ],
+ "from": "User",
+ "hot_plate_temp": [
+  "50"
+ ],
+ "hot_plate_temp_initial_layer": [
+  "50"
+ ],
+ "inherits": "Generic TPU @BBL H2S",
+ "name": "CC3D TPU 98A Skin @H2S",
+ "nozzle_temperature": [
+  "215",
+  "215"
+ ],
+ "nozzle_temperature_initial_layer": [
+  "215",
+  "215"
+ ],
+ "type": "filament",
+ "version": "2.4.0.2"
+}
