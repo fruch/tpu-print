@@ -141,9 +141,24 @@ def collect(out_root):
             rel = os.path.relpath(path, out_root)
             parts = rel.split(os.sep)
             if parts[0] == "preflight":
-                continue   # truncated copies; their headers describe the full print
-            printer = parts[0] if parts else "?"
-            kind = parts[1] if len(parts) > 1 else "?"
+                # The squish coupon is a normal complete slice and its header is
+                # accurate, so it belongs in the table. The adhesion checks are
+                # truncated copies whose headers still describe the FULL print,
+                # so listing them would report 11h for a 1h job. preflight.py
+                # stamps them, which is how we tell the two apart.
+                # The stamp sits near the END, just before the end g-code.
+                with open(path, "rb") as fh:
+                    fh.seek(max(0, os.path.getsize(path) - 200_000))
+                    if b"pre-flight truncation" in fh.read():
+                        continue
+            if parts[0] == "preflight":
+                # out/preflight/<printer>_squish_coupon.gcode
+                stem = os.path.splitext(parts[-1])[0]
+                printer, _, _ = stem.partition("_")
+                kind = "squish"
+            else:
+                printer = parts[0] if parts else "?"
+                kind = parts[1] if len(parts) > 1 else "?"
             slicer = "bambustudio" if "bambustudio" in parts else "orca"
 
             d = parse_gcode(path)

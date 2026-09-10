@@ -34,6 +34,14 @@ def box(x0, y0, z0, x1, y1, z1):
 
 
 def write_stl(path, tris):
+    # Drop zero-area triangles. Shapes built by offsetting a sphere (rbox)
+    # collapse their seams to lines; those carry no surface, and leaving them
+    # in makes every manifold check report the mesh as non-watertight.
+    def degenerate(t):
+        k = [tuple(round(c, 5) for c in v) for v in t]
+        return k[0] == k[1] or k[1] == k[2] or k[2] == k[0]
+
+    tris = [t for t in tris if not degenerate(t)]
     with open(path, "wb") as fh:
         fh.write(b"\0" * 80)
         fh.write(struct.pack("<I", len(tris)))

@@ -47,8 +47,8 @@ cat out/estimates.md
 an `INDEX.md` explaining each file and what to look for. Work through those,
 put the resulting numbers into `profiles/orca/*.json`, then re-run `./run.sh`.
 
-`run.sh` also writes `out/preflight/` — the first 25 layers of the real part at
-the real settings. Print that before committing to a long job.
+`run.sh` also writes `out/preflight/`, holding two different checks — see
+[Before a long print](#before-a-long-print).
 
 Override the slicer locations if they move:
 
@@ -140,6 +140,68 @@ soft-to-touch means 85–95A filament; no slicer setting substitutes for that.
 **One wall of TPU is hard to print on the Bowden Ender.** There is no second
 wall to hide under-extrusion, so the flow and retraction calibration in
 [CALIBRATION.md](CALIBRATION.md) stops being optional.
+
+---
+
+## Before a long print
+
+`out/preflight/` holds two things. They answer different questions and neither
+replaces the other.
+
+### `<printer>_squish_coupon.gcode` — how will it feel?
+
+A rounded box at the real part's thickness (30 mm), with footprint proportions
+copied from your model, printed with the **exact** model profile: 1 wall,
+5% gyroid, `gyroid_optimized`, 3/3 shells. ~25 min on the H2S.
+
+Rounded box rather than a cube, because the real part is a curved organic form
+and curvature changes how a single wall wraps the surface. Rather than a dome,
+because the broad flat-ish top is something you can press a thumb into. Not a
+sphere: its lower half is one large overhang and would need supports.
+
+```bash
+SQUISH_SHAPE=dome SQUISH_RADIUS=12 ./run.sh    # if you want a domed one instead
+```
+
+Thickness is what is kept honest, not overall size. Squish depends on wall
+thickness relative to the part's thickness, so the coupon is built at the real
+thickness and only its footprint is reduced.
+
+**Scaling the whole model down instead does not work for this.** Wall thickness
+does not scale: a quarter-size copy still has a 0.42 mm wall, so it is
+proportionally four times as thick and feels far stiffer than the real part.
+(Moot in any case — `--scale` is broken in Orca 2.4.2's CLI, failing with
+`return_code -100` on even a plain cube.)
+
+Too firm → `MODEL_INFILL=3%`. Too soft → `MODEL_INFILL=8%`. Re-run, print
+another coupon. That loop is the point of it.
+
+```bash
+SQUISH_SIZE=90 SQUISH_HEIGHT=40 ./run.sh
+```
+
+### `<printer>_bottom_clean.gcode` — will it stick?
+
+The first 25 layers of the real part, truncated from the real G-code. The only
+check that exercises the full 202 × 128 mm footprint, the real brim and the
+real first layer.
+
+It shows **no structure** — the bottom of the part is flat, so this is an
+adhesion test and nothing more. Don't try to judge feel from it.
+
+For real geometry you can hold, cut higher — but it gets expensive fast, and
+the result is open-topped, so it lacks the top skin that stiffens the real part:
+
+| Cut at | H2S | Ender 3 Pro |
+|---|---|---|
+| 10 mm | 48 m | 1 h 41 m |
+| 20 mm | 1 h 22 m | 2 h 56 m |
+| 30 mm | 1 h 54 m | 4 h 12 m |
+
+```bash
+PREFLIGHT_LAYERS=100 ./run.sh
+python3 scripts/preflight.py <gcode> <out> --height 30
+```
 
 ---
 
