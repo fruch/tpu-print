@@ -201,6 +201,10 @@ rm -rf out/ender3pro out/geniuspro out/h2s out/preflight
 rm -f  out/estimates.csv out/estimates.md
 mkdir -p out/{ender3pro,geniuspro,h2s}/{calibration,model} out/h2s/model/bambustudio
 
+# Every printer this script drives. Adding one means adding its ORCA_* array
+# below and its name here.
+PRINTER_LIST=(ender3pro geniuspro h2s)
+
 ORCA_ENDER=("$ORCA" --load-settings "$ENDER_MACHINE;$ENDER_PROCESS" --load-filaments "$ENDER_FILAMENT" "${ENDER_FIX[@]}")
 ORCA_GENIUS=("$ORCA" --load-settings "$GENIUS_MACHINE;$GENIUS_PROCESS" --load-filaments "$GENIUS_FILAMENT" "${ENDER_FIX[@]}")
 ORCA_H2S=("$ORCA"   --load-settings "$H2S_MACHINE;$H2S_PROCESS"     --load-filaments "$H2S_FILAMENT")
@@ -218,11 +222,50 @@ slice_dir "h2s"       model out/h2s/model               presets "${ORCA_H2S[@]}"
 slice_dir "h2s/bs"    model out/h2s/model/bambustudio   presets "${BS_H2S[@]}"     "${MODEL_OVERRIDE[@]}"
 
 # ----------------------------------------------------------- 4. preflight ---
-# A short version of the REAL part at the REAL settings. Calibration towers
-# validate the filament; they say nothing about whether this geometry sticks
-# over a 200 mm footprint at 1 wall / 5% infill. The bottom is also where a
-# long print fails, so it is the part worth seeing before committing hours.
-bold "4. Pre-flight (first ${PREFLIGHT_LAYERS:-25} layers of the real part)"
+# Does the real footprint stick? Nothing else answers that: the coupon above
+# has a fraction of the bed contact. This is ONLY an adhesion check -- the
+# bottom of the part is flat, so it shows no structure and is not something to
+# squeeze. Raise PREFLIGHT_LAYERS, or use scripts/preflight.py --height, to
+# keep real geometry, at the cost of a much longer print.
+bold "4a. Squish coupon (rounded, real thickness, model settings)"
+# The point of this one is FEEL. It is printed at the real wall count, the real
+# infill and the real pattern, at full scale, so squeezing it tells you how the
+# finished part will behave. Scaling the model down would not: wall thickness
+# does not scale, so a small copy is proportionally far stiffer.
+# It is a plain block, not the part's shape -- geometry is what the pre-flight
+# below and the estimates are for.
+# A rounded box rather than a cube: the real part is a curved organic form, and
+# curvature changes how a single wall wraps the surface. Its footprint
+# proportions are copied from the real model. A rounded box beats a dome here
+# because the broad flat-ish top is something you can actually press a thumb
+# into, and beats a sphere because a sphere's lower half is one large overhang
+# that would need supports.
+# HEIGHT stays at the part's real thickness -- squish depends on wall thickness
+# relative to part thickness, so shrinking the height would stiffen it the same
+# way scaling the whole model down does.
+SQUISH_SIZE="${SQUISH_SIZE:-62}"
+SQUISH_HEIGHT="${SQUISH_HEIGHT:-30}"
+SQ_STL="calibration/squish_coupon.stl"
+SQ_ASPECT=""
+first_model="$(ls model/*.stl 2>/dev/null | head -1)"
+[[ -n "$first_model" ]] && SQ_ASPECT="--aspect-from ../$first_model"
+SQUISH_RADIUS="${SQUISH_RADIUS:-12}"  # generous fillet; the real part has no sharp edges
+(cd scripts && python3 make_test_shapes.py "${SQUISH_SHAPE:-rbox}" --out "../$SQ_STL" \
+    --size "$SQUISH_SIZE" --height "$SQUISH_HEIGHT" \
+    --radius "$SQUISH_RADIUS" $SQ_ASPECT) 2>/dev/null
+mkdir -p out/preflight
+for printer in "${PRINTER_LIST[@]}"; do
+    case "$printer" in
+      ender3pro) ARGV=("${ORCA_ENDER[@]}") ;;
+      geniuspro) ARGV=("${ORCA_GENIUS[@]}") ;;
+      h2s)       ARGV=("${ORCA_H2S[@]}") ;;
+      *) die "no slicer arguments defined for printer '$printer'" ;;
+    esac
+    slice_one "$printer" "out/preflight" "${printer}_squish_coupon" "$SQ_STL" -- \
+        "${ARGV[@]}" "${MODEL_OVERRIDE[@]}" "${ORCA_ONLY[@]}"
+done
+
+bold "4b. Adhesion check (first ${PREFLIGHT_LAYERS:-25} layers of the real part)"
 shopt -s nullglob
 for g in out/*/model/*.gcode; do
     printer="$(cut -d/ -f2 <<< "$g")"
