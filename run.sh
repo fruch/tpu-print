@@ -21,6 +21,10 @@ ENDER_PROCESS="$ORCA_SYS/Creality/process/0.20mm Standard @Creality Ender3 Pro 0
 # profile folder).
 ENDER_FILAMENT="$HERE/profiles/orca/CC3D TPU 98A Skin @Ender3Pro.json"
 
+GENIUS_MACHINE="$ORCA_SYS/Artillery/machine/Artillery Genius Pro 0.4 nozzle.json"
+GENIUS_PROCESS="$ORCA_SYS/Artillery/process/0.20mm Standard @Artillery Genius Pro.json"
+GENIUS_FILAMENT="$HERE/profiles/orca/CC3D TPU 98A Skin @GeniusPro.json"
+
 H2S_MACHINE="$ORCA_SYS/BBL/machine/Bambu Lab H2S 0.4 nozzle.json"
 H2S_PROCESS="$ORCA_SYS/BBL/process/0.20mm Standard @BBL H2S.json"
 H2S_FILAMENT="$HERE/profiles/orca/CC3D TPU 98A Skin @H2S.json"
@@ -91,7 +95,8 @@ bold "0. Tooling"
 [[ -x "$BAMBU" ]] || die "Bambu Studio AppImage not found/executable: $BAMBU (override with BAMBU=...)"
 echo "  Orca  : $ORCA"
 echo "  Bambu : $BAMBU"
-for f in "$ENDER_MACHINE" "$ENDER_PROCESS" "$H2S_MACHINE" "$H2S_PROCESS" "$BS_MACHINE" "$BS_PROCESS"; do
+for f in "$ENDER_MACHINE" "$ENDER_PROCESS" "$GENIUS_MACHINE" "$GENIUS_PROCESS" \
+         "$H2S_MACHINE" "$H2S_PROCESS" "$BS_MACHINE" "$BS_PROCESS"; do
     [[ -f "$f" ]] || die "missing preset: $f"
 done
 
@@ -106,7 +111,7 @@ python3 scripts/install_orca_presets.py "profiles/orca/*.json"
 [[ -f "$BS_FILAMENT_GUI" ]] || die "Bambu Studio preset missing: $BS_FILAMENT_GUI (create it in the GUI first)"
 python3 scripts/make_cli_preset.py "$BS_FILAMENT_GUI" "$BS_FILAMENT_CLI"
 
-for f in "$ENDER_FILAMENT" "$H2S_FILAMENT" "$BS_FILAMENT_CLI"; do
+for f in "$ENDER_FILAMENT" "$GENIUS_FILAMENT" "$H2S_FILAMENT" "$BS_FILAMENT_CLI"; do
     [[ -f "$f" ]] || die "missing filament preset: $f"
 done
 
@@ -184,28 +189,31 @@ slice_dir() {
 
 bold "3. Slice"
 if [[ -n "$MODEL_INFILL" ]]; then
-    echo "  soft profile pinned on both printers: ${MODEL_WALLS} wall(s)," \
+    echo "  soft profile pinned on all printers: ${MODEL_WALLS} wall(s)," \
          "infill $MODEL_INFILL $MODEL_PATTERN, shells ${MODEL_TOP} top / ${MODEL_BOTTOM} bottom"
 else
-    echo "  model: each preset's own defaults (Creality 15%/7/5 vs BBL 20%/4/3 — not comparable)"
+    echo "  model: each preset's own defaults (they differ per vendor — not comparable)"
 fi
 # Remove only what THIS script generates. `rm -rf out` would also take
 # out/calibration/, which calibrate.sh writes and which can represent hours of
 # printing decisions -- never blanket-delete a directory you do not own.
-rm -rf out/ender3pro out/h2s out/preflight
+rm -rf out/ender3pro out/geniuspro out/h2s out/preflight
 rm -f  out/estimates.csv out/estimates.md
-mkdir -p out/{ender3pro,h2s}/{calibration,model} out/h2s/model/bambustudio
+mkdir -p out/{ender3pro,geniuspro,h2s}/{calibration,model} out/h2s/model/bambustudio
 
 ORCA_ENDER=("$ORCA" --load-settings "$ENDER_MACHINE;$ENDER_PROCESS" --load-filaments "$ENDER_FILAMENT" "${ENDER_FIX[@]}")
+ORCA_GENIUS=("$ORCA" --load-settings "$GENIUS_MACHINE;$GENIUS_PROCESS" --load-filaments "$GENIUS_FILAMENT" "${ENDER_FIX[@]}")
 ORCA_H2S=("$ORCA"   --load-settings "$H2S_MACHINE;$H2S_PROCESS"     --load-filaments "$H2S_FILAMENT")
 BS_H2S=("$BAMBU"    --load-settings "$BS_MACHINE;$BS_PROCESS"       --load-filaments "$BS_FILAMENT_CLI")
 
 # Calibration STLs are per-printer: what you export from Orca's Calibration menu
 # is already bound to the machine it was generated for.
 slice_dir "ender3pro" calibration/ender3pro out/ender3pro/calibration respect3mf "${ORCA_ENDER[@]}"
+slice_dir "geniuspro" calibration/geniuspro out/geniuspro/calibration respect3mf "${ORCA_GENIUS[@]}"
 slice_dir "h2s"       calibration/h2s       out/h2s/calibration       respect3mf "${ORCA_H2S[@]}"
 
 slice_dir "ender3pro" model out/ender3pro/model         presets "${ORCA_ENDER[@]}" "${MODEL_OVERRIDE[@]}" "${ORCA_ONLY[@]}"
+slice_dir "geniuspro" model out/geniuspro/model        presets "${ORCA_GENIUS[@]}" "${MODEL_OVERRIDE[@]}" "${ORCA_ONLY[@]}"
 slice_dir "h2s"       model out/h2s/model               presets "${ORCA_H2S[@]}"   "${MODEL_OVERRIDE[@]}" "${ORCA_ONLY[@]}"
 slice_dir "h2s/bs"    model out/h2s/model/bambustudio   presets "${BS_H2S[@]}"     "${MODEL_OVERRIDE[@]}"
 

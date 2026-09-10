@@ -18,7 +18,7 @@ cd "$HERE"
 ORCA="${ORCA:-$HOME/Downloads/OrcaSlicer_Linux_AppImage_Ubuntu2404_V2.4.2.AppImage}"
 SYS="$HOME/.config/OrcaSlicer/system"
 
-PRINTERS="${PRINTERS:-ender3pro h2s}"
+PRINTERS="${PRINTERS:-ender3pro geniuspro h2s}"
 TESTS=("$@"); [[ ${#TESTS[@]} -eq 0 ]] && TESTS=(level temp flow retraction mvs)
 
 # CC3D rates this filament 195-215 C. Bracket the spec: a little over the top
@@ -29,6 +29,7 @@ T_START="${START:-225}"; T_END="${END:-195}"; T_STEP="${STEP:-5}"; T_BAND="${BAN
 
 # Sweep values. Bowden and direct drive need different retraction ranges.
 RETR_ENDER="${RETR_ENDER:-1.5 2.0 2.5 3.0}"
+RETR_GENIUS="${RETR_GENIUS:-0.5 1.0 1.5 2.0}"
 RETR_H2S="${RETR_H2S:-0.2 0.4 0.6 0.8}"
 RETR_BAND="${RETR_BAND:-10}"   # taller bands than the other towers: more travels to judge
 FLOW_START="${FLOW_START:-90}"; FLOW_END="${FLOW_END:-115}"; FLOW_STEP="${FLOW_STEP:-5}"
@@ -55,12 +56,19 @@ presets_for() {
         # Ender chain leaves use_relative_e_distances unset -> relative E with
         # an empty layer_change_gcode, which Orca refuses to slice.
         EXTRA=(--layer-change-gcode $'G92 E0\n'); MVS_CEIL="${MVS_CEIL_ENDER:-5}" ;;
+      geniuspro)
+        MACHINE="$SYS/Artillery/machine/Artillery Genius Pro 0.4 nozzle.json"
+        PROCESS="$SYS/Artillery/process/0.20mm Standard @Artillery Genius Pro.json"
+        FILAMENT="$HERE/profiles/orca/CC3D TPU 98A Skin @GeniusPro.json"
+        # Same gap as the Ender: the chain never sets use_relative_e_distances,
+        # so Orca falls back to relative E with an empty layer_change_gcode.
+        EXTRA=(--layer-change-gcode $'G92 E0\n'); MVS_CEIL="${MVS_CEIL_GENIUS:-8}" ;;
       h2s)
         MACHINE="$SYS/BBL/machine/Bambu Lab H2S 0.4 nozzle.json"
         PROCESS="$SYS/BBL/process/0.20mm Standard @BBL H2S.json"
         FILAMENT="$HERE/profiles/orca/CC3D TPU 98A Skin @H2S.json"
         EXTRA=(); MVS_CEIL="${MVS_CEIL_H2S:-16}" ;;
-      *) die "unknown printer '$1' (expected ender3pro or h2s)" ;;
+      *) die "unknown printer '$1' (expected ender3pro, geniuspro or h2s)" ;;
     esac
     [[ -f "$MACHINE" && -f "$PROCESS" && -f "$FILAMENT" ]] || die "missing preset for $1"
 }
@@ -134,7 +142,11 @@ for printer in $PRINTERS; do
 
       retraction)
         bold "$printer · retraction tower"
-        vals="$RETR_ENDER"; [[ "$printer" == h2s ]] && vals="$RETR_H2S"
+        case "$printer" in
+          geniuspro) vals="$RETR_GENIUS" ;;
+          h2s)       vals="$RETR_H2S" ;;
+          *)         vals="$RETR_ENDER" ;;
+        esac
         nvals=$(wc -w <<< "$vals")
         towerh=$(python3 -c "print($nvals * $RETR_BAND)")
         STL="calibration/retraction_pillars.stl"
