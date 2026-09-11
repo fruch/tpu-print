@@ -96,8 +96,26 @@ def main():
     tris = []
     tris += box(-o, -o, 0, width + o, depth + o, a.base_height)           # base slab
     if a.shape == "pillars":
-        tris += box(0, 0, 0, a.pillar, depth, a.base_height + height)     # pillar A
-        tris += box(a.pillar + a.gap, 0, 0, width, depth, a.base_height + height)  # pillar B
+        # Build the pillars band by band, each one stepped back in Y and
+        # carrying a cantilevered shelf:
+        #   * the step makes band boundaries visible, so you can COUNT which
+        #     band you are looking at instead of measuring with calipers
+        #   * the shelf is an unsupported horizontal overhang, which is what
+        #     actually reacts to nozzle temperature. Two plain rectangular
+        #     pillars only ever test stringing.
+        shelf = a.pillar * 0.6
+        # Boxes that merely touch share an edge between four faces, which every
+        # manifold check calls non-watertight. Overlap each solid slightly into
+        # its neighbour instead; slicers union them and no edge coincides.
+        ov = 0.02
+        for i in range(len(seq)):
+            z0 = a.base_height + i * a.band_height
+            z1 = z0 + a.band_height
+            d = depth - i * 0.8                      # visible step per band
+            for x0, x1 in ((0.0, a.pillar), (a.pillar + a.gap, width)):
+                tris += box(x0, 0, z0, x1, d, z1 + ov)
+                # shelf juts out the back, unsupported, reacting to temperature
+                tris += box(x0, d - ov, z1 - 0.6, x1, d + shelf, z1)
     else:
         # One solid block: flow and speed are judged on the top/side surface,
         # not on strings, so a gap would only waste filament.

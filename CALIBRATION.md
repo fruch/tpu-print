@@ -83,7 +83,7 @@ A temp tower is tall and thin, and in TPU it is floppy. In order of effect:
 2. **Drop travel speed** from 150 mm/s to ~80. A bed-slinger whips a tall part.
 3. **Add a brim** — TPU sticks well, but the footprint is small.
 4. **Print the calibration model rigid** — 2–3 walls, 15–20% infill. Do not use
-   the soft 1-wall profile from `run.sh` for calibration prints; a floppy test
+   the soft model profile from `run.sh` for calibration prints; a floppy test
    tower measures nothing and falls over.
 
 ### If it strings at every temperature

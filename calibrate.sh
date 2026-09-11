@@ -95,17 +95,17 @@ mkdir -p calibration
 
 for printer in $PRINTERS; do
     presets_for "$printer"
-    OUT="out/calibration/$printer"
+    OUT="out/$printer/calibration"
     STEP_N=0
     mkdir -p "$OUT"
-    : > "$OUT.index"   # collected into INDEX.md at the end
+    : > "out/$printer/.calibration.index"   # collected into INDEX.md at the end
 
     # nn <slug> -> sets FN to "out/calibration/<printer>/NN_<slug>.gcode"
     nn() {
         STEP_N=$((STEP_N + 1))
         FN="$(printf '%s/%02d_%s.gcode' "$OUT" "$STEP_N" "$1")"
     }
-    note() { printf '%s\t%s\t%s\t%s\n' "$(basename "$FN")" "$1" "$2" "$3" >> "$OUT.index"; }
+    note() { printf '%s\t%s\t%s\t%s\n' "$(basename "$FN")" "$1" "$2" "$3" >> "out/$printer/.calibration.index"; }
 
     for test in "${TESTS[@]}"; do
     case "$test" in
@@ -220,12 +220,12 @@ done
 
 # Turn each printer's collected notes into a readable index.
 for printer in $PRINTERS; do
-    idx="out/calibration/$printer.index"
+    idx="out/$printer/.calibration.index"
     [[ -f "$idx" ]] || continue
     python3 - "$printer" "$idx" <<'PY'
 import os, sys, re
 printer, idx = sys.argv[1], sys.argv[2]
-out = f"out/calibration/{printer}"
+out = f"out/{printer}/calibration"
 rows = [l.rstrip("\n").split("\t") for l in open(idx) if l.strip()]
 
 def est(fn):
@@ -282,7 +282,7 @@ done
 
 bold "Done"
 cat <<'EOF'
-  Everything is in out/calibration/<printer>/, numbered in print order.
-  Read out/calibration/<printer>/INDEX.md -- it lists every file, what it is,
+  Everything is in out/<printer>/calibration/, numbered in print order.
+  Read out/<printer>/calibration/INDEX.md -- it lists every file, what it is,
   and what to look for.
 EOF
