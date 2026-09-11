@@ -28,7 +28,7 @@ TESTS=("$@"); [[ ${#TESTS[@]} -eq 0 ]] && TESTS=(level temp flow retraction mvs)
 T_START="${START:-225}"; T_END="${END:-195}"; T_STEP="${STEP:-5}"; T_BAND="${BAND:-6}"
 
 # Sweep values. Bowden and direct drive need different retraction ranges.
-RETR_ENDER="${RETR_ENDER:-1.5 2.0 2.5 3.0}"
+RETR_ENDER="${RETR_ENDER:-1 2 3 4 5 6}"   # Orca recommends 1-6mm for Bowden
 RETR_GENIUS="${RETR_GENIUS:-0.5 1.0 1.5 2.0}"
 RETR_H2S="${RETR_H2S:-0.2 0.4 0.6 0.8}"
 RETR_BAND="${RETR_BAND:-10}"   # taller bands than the other towers: more travels to judge
@@ -174,15 +174,18 @@ for printer in $PRINTERS; do
       flow)
         bold "$printer · flow ratio tower (M221 per band)"
         STL="calibration/flow_tower.stl"
-        LG="$(python3 scripts/make_temp_tower.py --mode flow --shape block \
+        LG="$(python3 scripts/make_temp_tower.py --mode flow --shape stairs \
                 --start "$FLOW_START" --end "$FLOW_END" --step "$FLOW_STEP" \
                 --band-height "$T_BAND" --out "$STL" 2>/dev/null)"
         EXTRA_SAVE=("${EXTRA[@]}"); EXTRA=(--layer-change-gcode "$LG")
         nn "flow_tower_${FLOW_START}-${FLOW_END}pct"
-        slice_to "$STL" "$FN" --top-shell-layers 4 --wall-loops 2
+        # Flow is read off the TOP skin, so give each step a proper one and
+        # a monotonic pattern, which is what makes gaps between lines visible.
+        slice_to "$STL" "$FN" --top-shell-layers 4 --wall-loops 2 \
+            --top-surface-pattern monotonic --top-surface-line-width 0.42
         EXTRA=("${EXTRA_SAVE[@]}")
         printf '  %-28s %s\n' "$(basename "$FN")" "$(est "$FN")"
-        note "Flow ratio tower" "flow tower ${FLOW_START}-${FLOW_END}%" "ONE print. Bottom band = ${FLOW_START}% flow, each ${T_BAND}mm band +${FLOW_STEP}%. Look at the side walls: gaps between lines = too little, bulging/rough = too much. Best band % / 100 = your flow ratio."
+        note "Flow ratio tower" "flow tower ${FLOW_START}-${FLOW_END}%" "ONE print, a staircase: each STEP has its own top surface, printed at its own flow. Lowest step = ${FLOW_START}%, +${FLOW_STEP}% per step going up. Look DOWN at the steps: gaps between the lines = too little flow, ridged or bulging = too much. The smoothest step wins; its % / 100 is your flow ratio."
         ;;
 
       mvs)
