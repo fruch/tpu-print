@@ -11,25 +11,17 @@ Calibration itself is a GUI job: see **[CALIBRATION.md](CALIBRATION.md)**.
 ## Layout
 
 ```
-calibration/
-  ender3pro/     drop calibration .3mf projects here (optional)
-  h2s/
+calibration/     inputs: calibration .3mf projects (optional)
 model/           drop the STL you actually want to print here
-profiles/
-  orca/          the two Orca filament presets — source of truth, edit these
-  bambustudio/   snapshot of the GUI preset + a generated CLI-safe copy
-scripts/
-  inspect_models.py       bbox / manifold / build-volume fit (no dependencies)
-  inspect_gcode.py        what a g-code contains: test type, temp sweep, retractions
-  install_orca_presets.py install presets into the profile folder Orca really uses
-  make_cli_preset.py      GUI preset -> Bambu-Studio-CLI-safe preset
-  make_temp_tower.py      banded tower STL + the matching layer-change g-code
-  make_test_shapes.py     pillars / plate test bodies
-  retraction_tower.py     rescale retraction moves per band
-  preflight.py            cut a long print down to its first N layers
-  parse_estimates.py      G-code headers -> estimates.csv + estimates.md
-out/                   generated; wiped on every run
-run.sh                 the whole pipeline
+profiles/        filament presets -- source of truth, edit these
+scripts/         helpers (see below)
+out/             generated; one folder per printer
+  <printer>/
+    calibration/   the five calibration prints + INDEX.md
+    model/         the real part
+    preflight/     squish_coupon + adhesion_<model>
+  estimates.csv
+  estimates.md
 ```
 
 ## Use
@@ -122,8 +114,8 @@ BBL 20% / 4 / 3).
 
 | Env var | Default | Effect |
 |---|---|---|
-| `MODEL_WALLS` | `1` | **The dominant lever.** Bending stiffness goes with thickness³, so 2→1 walls softens far more than any infill change |
-| `MODEL_INFILL` | `5%` | Lower is softer; below ~3% gyroid gets fragile |
+| `MODEL_WALLS` | `2` | A single 0.42 mm wall prints translucent and brittle — too fragile for a handled part, and nothing for under-extrusion to hide behind on a Bowden machine. Two walls cost no extra time. Pressing a broad face is carried mostly by infill and the top shell, so this stiffens the edges and skin more than the squeeze |
+| `MODEL_INFILL` | `4%` | The main squish dial. Lower is softer; below ~3% gyroid gets fragile |
 | `MODEL_PATTERN` | `gyroid` | Isotropic, no vertical columns — squashes evenly instead of feeling ribbed |
 | `MODEL_TOP` / `MODEL_BOTTOM` | `3` / `3` | Solid sheets are what make a print feel like a hard shell. 2 is softer but pillows at 5% infill |
 | `MODEL_GYROID_OPT` | `1` | Tightens the gyroid wave along Z so sparse infill resists compression **buckling** instead of crushing permanently. Same filament, same time. Only does anything below ~30% density with gyroid — i.e. exactly this profile. Orca-only; Bambu Studio errors on the flag |
@@ -151,8 +143,8 @@ replaces the other.
 ### `<printer>_squish_coupon.gcode` — how will it feel?
 
 A rounded box at the real part's thickness (30 mm), with footprint proportions
-copied from your model, printed with the **exact** model profile: 1 wall,
-5% gyroid, `gyroid_optimized`, 3/3 shells. ~25 min on the H2S.
+copied from your model, printed with the **exact** model profile: 2 walls,
+4% gyroid, `gyroid_optimized`, 3/3 shells.
 
 Rounded box rather than a cube, because the real part is a curved organic form
 and curvature changes how a single wall wraps the surface. Rather than a dome,

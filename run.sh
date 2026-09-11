@@ -13,6 +13,10 @@ ORCA_SYS="$HOME/.config/OrcaSlicer/system"
 BAMBU_SYS="$HOME/.config/BambuStudio/system"
 BAMBU_USER="$HOME/.config/BambuStudio/user/default/filament"
 
+# Every printer this script drives. Adding one means adding its presets and
+# its ORCA_* array below, and its name here.
+PRINTER_LIST=(ender3pro geniuspro h2s)
+
 ENDER_MACHINE="$ORCA_SYS/Creality/machine/Creality Ender-3 Pro 0.4 nozzle.json"
 ENDER_PROCESS="$ORCA_SYS/Creality/process/0.20mm Standard @Creality Ender3 Pro 0.4.json"
 # Slice straight from the repo copies: Orca resolves `inherits` against the
@@ -47,16 +51,20 @@ ENDER_FIX=(--layer-change-gcode $'G92 E0\n')
 # an empty string to fall back to each preset's own defaults entirely.
 # Tuned for a SOFT part in 98A TPU. 98A is the stiff end of TPU, so all the
 # compliance has to come from geometry:
-#   wall_loops      the dominant lever by far -- bending stiffness goes with
-#                   thickness CUBED, so 2 walls -> 1 wall does more for softness
-#                   than any infill change. 1 wall of TPU is fiddly on Bowden.
+#   wall_loops      2, not 1. A single 0.42mm wall prints translucent and
+#                   brittle and is too fragile for a part that gets handled,
+#                   and on a Bowden machine it has nothing to hide
+#                   under-extrusion behind. Two walls cost no extra print time.
+#                   Pressing down on a broad face is carried mostly by the
+#                   infill and the top shell, so this firms up the edges and
+#                   the skin far more than it firms up the squeeze.
 #   shells          solid top/bottom sheets are what make a print feel like a
 #                   hard shell. 3 is about the floor before 5% infill pillows.
 #   gyroid          isotropic and has no straight vertical columns, so it
 #                   squashes evenly instead of feeling like a stack of ribs.
-MODEL_INFILL="${MODEL_INFILL-5%}"
+MODEL_INFILL="${MODEL_INFILL-4%}"
 MODEL_PATTERN="${MODEL_PATTERN-gyroid}"
-MODEL_WALLS="${MODEL_WALLS-1}"
+MODEL_WALLS="${MODEL_WALLS-2}"
 # Tightens the gyroid wave along Z at low density, shortening the effective
 # vertical column length so the infill resists compression BUCKLING instead of
 # crushing permanently. Filament use is unchanged, and it only does anything
@@ -197,13 +205,14 @@ fi
 # Remove only what THIS script generates. `rm -rf out` would also take
 # out/calibration/, which calibrate.sh writes and which can represent hours of
 # printing decisions -- never blanket-delete a directory you do not own.
-rm -rf out/ender3pro out/geniuspro out/h2s out/preflight
+# Delete only what THIS script owns. out/<printer>/calibration/ belongs to
+# calibrate.sh and can represent hours of printing decisions.
+for _p in "${PRINTER_LIST[@]}"; do
+    rm -rf "out/$_p/model" "out/$_p/preflight"
+done
 rm -f  out/estimates.csv out/estimates.md
-mkdir -p out/{ender3pro,geniuspro,h2s}/{calibration,model} out/h2s/model/bambustudio
-
-# Every printer this script drives. Adding one means adding its ORCA_* array
-# below and its name here.
-PRINTER_LIST=(ender3pro geniuspro h2s)
+for _p in "${PRINTER_LIST[@]}"; do mkdir -p "out/$_p/model" "out/$_p/preflight"; done
+mkdir -p out/h2s/model/bambustudio
 
 ORCA_ENDER=("$ORCA" --load-settings "$ENDER_MACHINE;$ENDER_PROCESS" --load-filaments "$ENDER_FILAMENT" "${ENDER_FIX[@]}")
 ORCA_GENIUS=("$ORCA" --load-settings "$GENIUS_MACHINE;$GENIUS_PROCESS" --load-filaments "$GENIUS_FILAMENT" "${ENDER_FIX[@]}")
@@ -253,7 +262,7 @@ SQUISH_RADIUS="${SQUISH_RADIUS:-12}"  # generous fillet; the real part has no sh
 (cd scripts && python3 make_test_shapes.py "${SQUISH_SHAPE:-rbox}" --out "../$SQ_STL" \
     --size "$SQUISH_SIZE" --height "$SQUISH_HEIGHT" \
     --radius "$SQUISH_RADIUS" $SQ_ASPECT) 2>/dev/null
-mkdir -p out/preflight
+
 for printer in "${PRINTER_LIST[@]}"; do
     case "$printer" in
       ender3pro) ARGV=("${ORCA_ENDER[@]}") ;;
@@ -261,7 +270,7 @@ for printer in "${PRINTER_LIST[@]}"; do
       h2s)       ARGV=("${ORCA_H2S[@]}") ;;
       *) die "no slicer arguments defined for printer '$printer'" ;;
     esac
-    slice_one "$printer" "out/preflight" "${printer}_squish_coupon" "$SQ_STL" -- \
+    slice_one "$printer" "out/$printer/preflight" "squish_coupon" "$SQ_STL" -- \
         "${ARGV[@]}" "${MODEL_OVERRIDE[@]}" "${ORCA_ONLY[@]}"
 done
 
@@ -269,9 +278,9 @@ bold "4b. Adhesion check (first ${PREFLIGHT_LAYERS:-25} layers of the real part)
 shopt -s nullglob
 for g in out/*/model/*.gcode; do
     printer="$(cut -d/ -f2 <<< "$g")"
-    dest="out/preflight/${printer}_$(basename "$g")"
-    mkdir -p out/preflight
-    printf '  %-34s ' "$(basename "$dest")"
+    dest="out/$printer/preflight/adhesion_$(basename "$g")"
+    mkdir -p "out/$printer/preflight"
+    printf '  %-10s %-28s ' "$printer" "$(basename "$dest")"
     python3 scripts/preflight.py "$g" "$dest" --layers "${PREFLIGHT_LAYERS:-25}" 2>&1 \
         | sed 's/^# //' || true
 done
