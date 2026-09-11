@@ -76,17 +76,21 @@ def main():
     ap.add_argument("--mode", default="temp", choices=["temp", "flow", "speed"],
                     help="temp: M104 nozzle temp | flow: M221 extrusion %% | "
                          "speed: M220 feedrate %%")
-    ap.add_argument("--shape", default="pillars", choices=["pillars", "block"],
-                    help="pillars: a gap to judge stringing | block: a solid "
-                         "top surface to judge extrusion")
+    ap.add_argument("--shape", default="pillars", choices=["pillars", "block", "stairs"],
+                    help="pillars: a gap to judge stringing | stairs: one "
+                         "exposed top surface per band | block: a plain solid")
     ap.add_argument("--out", default="calibration/temp_tower.stl")
     ap.add_argument("--gcode-out", default=None)
     a = ap.parse_args()
 
     seq = temps(a.start, a.end, a.step)
     height = len(seq) * a.band_height
-    width = a.pillar * 2 + a.gap
-    depth = a.pillar
+    if a.shape == "stairs":
+        width = a.pillar * 0.8 * len(seq) + a.gap
+        depth = a.pillar * 1.6
+    else:
+        width = a.pillar * 2 + a.gap
+        depth = a.pillar
 
     # Three overlapping closed boxes; every slicer unions them. The base is
     # made strictly LARGER than the pillar footprints in both X and Y so no
@@ -116,9 +120,23 @@ def main():
                 tris += box(x0, 0, z0, x1, d, z1 + ov)
                 # shelf juts out the back, unsupported, reacting to temperature
                 tris += box(x0, d - ov, z1 - 0.6, x1, d + shelf, z1)
+    elif a.shape == "stairs":
+        # A staircase, so every band ends in its own exposed top surface.
+        # Flow ratio is judged on the TOP skin -- whether the lines merge
+        # cleanly or leave gaps between them. A vertical block shows only
+        # side walls, where nothing about flow is visible, which is why the
+        # first version of this tower was unreadable.
+        ov = 0.02
+        tread = a.pillar * 0.8
+        # Side-by-side columns of increasing height, not nested boxes: nested
+        # ones all share the same bottom corner and every shared edge then
+        # belongs to four faces. Columns overlap slightly in X instead.
+        for i in range(len(seq)):
+            x0 = i * tread
+            x1 = (i + 1) * tread + ov
+            z1 = a.base_height + (i + 1) * a.band_height
+            tris += box(x0, 0, 0, x1, depth, z1)
     else:
-        # One solid block: flow and speed are judged on the top/side surface,
-        # not on strings, so a gap would only waste filament.
         tris += box(0, 0, 0, width, depth, a.base_height + height)
     write_stl(a.out, tris)
 
@@ -134,7 +152,7 @@ def main():
     for i, t in enumerate(seq):
         top = a.base_height + (i + 1) * a.band_height
         kw = "if" if i == 0 else "elsif"
-        clauses.append(f"{{{kw} layer_z < {top:.2f}}}{cmd}{t}")
+        clauses.append(f"{{{kw} layer_z < {top:.2f}}}{cmd}{t}\n; Calib_band {a.mode} = {t}")
     gcode = "".join(clauses) + f"{{else}}{cmd}{seq[-1]}{{endif}}\nG92 E0\n"
 
     print(f"# tower: {width:.0f} x {depth:.0f} x {a.base_height + height:.0f} mm, "
