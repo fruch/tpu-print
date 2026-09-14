@@ -25,6 +25,15 @@ TESTS=("$@"); [[ ${#TESTS[@]} -eq 0 ]] && TESTS=(level temp flow retraction mvs)
 # to find the ceiling, a little under the bottom. Sweeping to 235 puts half the
 # tower above the filament's maximum, where it oozes regardless of anything
 # else -- which then looks exactly like a moisture problem.
+# FAST=1 trades resolution for time: coarser steps and shorter bands, so a
+# whole suite fits in about an hour instead of three and a half. Good enough to
+# find the right neighbourhood; re-run without it later to refine.
+if [[ "${FAST:-0}" == "1" ]]; then
+    : "${STEP:=10}" "${BAND:=4}" "${FLOW_STEP:=10}" "${SPD_STEP:=25}"
+    : "${RETR_ENDER:=1 2.5 4 6}" "${RETR_GENIUS:=0.5 1 1.5 2}" "${RETR_H2S:=0.2 0.5 0.8}"
+    : "${RETR_BAND:=7}"
+fi
+
 T_START="${START:-225}"; T_END="${END:-195}"; T_STEP="${STEP:-5}"; T_BAND="${BAND:-6}"
 
 # Sweep values. Bowden and direct drive need different retraction ranges.

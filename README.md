@@ -55,7 +55,8 @@ sanity check, and again after calibration gives you real numbers.
 ## Calibration (`calibrate.sh`)
 
 ```bash
-./calibrate.sh                 # all tests, both printers
+./calibrate.sh                 # all tests, all printers
+FAST=1 ./calibrate.sh          # coarser steps, ~1h per printer instead of ~3.5h
 ./calibrate.sh level           # just the first-layer / bed-levelling sheet
 PRINTERS=h2s ./calibrate.sh temp
 ```
