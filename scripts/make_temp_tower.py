@@ -118,8 +118,17 @@ def main():
             d = depth - i * 0.8                      # visible step per band
             for x0, x1 in ((0.0, a.pillar), (a.pillar + a.gap, width)):
                 tris += box(x0, 0, z0, x1, d, z1 + ov)
-                # shelf juts out the back, unsupported, reacting to temperature
-                tris += box(x0, d - ov, z1 - 0.6, x1, d + shelf, z1)
+                # A 45-degree ramp growing out of the back face, approximated in
+                # 1mm steps. It must GROW outward layer by layer: a flat shelf
+                # cantilevered into thin air has nothing to print onto and droops
+                # into blobs at every temperature, which measures nothing.
+                # A ramp is supported by the layer beneath it all the way, so
+                # only genuine overhang sag shows.
+                steps = max(1, int(shelf))
+                for k in range(steps):
+                    zz0 = z0 + k * (a.band_height / steps)
+                    zz1 = z0 + (k + 1) * (a.band_height / steps) + ov
+                    tris += box(x0, d - ov, zz0, x1, d + (k + 1) * (shelf / steps), zz1)
     elif a.shape == "stairs":
         # A staircase, so every band ends in its own exposed top surface.
         # Flow ratio is judged on the TOP skin -- whether the lines merge
