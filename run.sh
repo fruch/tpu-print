@@ -70,6 +70,11 @@ MODEL_WALLS="${MODEL_WALLS-2}"
 # crushing permanently. Filament use is unchanged, and it only does anything
 # below ~30% density with a gyroid pattern -- i.e. exactly this profile.
 MODEL_GYROID_OPT="${MODEL_GYROID_OPT-1}"
+# Travel speed is a stringing setting. 80 was set to stop a tall calibration
+# tower being knocked over and had no business on the real part: slower travel
+# gives ooze nearly twice as long to draw a string. Orca's own default here
+# is 150, and 150 measured dramatically cleaner.
+MODEL_TRAVEL="${MODEL_TRAVEL-150}"
 MODEL_TOP="${MODEL_TOP-3}"
 MODEL_BOTTOM="${MODEL_BOTTOM-3}"
 
@@ -79,6 +84,7 @@ if [[ -n "$MODEL_INFILL" ]]; then
         --sparse-infill-density "$MODEL_INFILL"
         --sparse-infill-pattern "$MODEL_PATTERN"
         --wall-loops            "$MODEL_WALLS"
+        --travel-speed          "$MODEL_TRAVEL"
         --top-shell-layers      "$MODEL_TOP"
         --bottom-shell-layers   "$MODEL_BOTTOM"
     )

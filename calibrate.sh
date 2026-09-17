@@ -159,7 +159,8 @@ for printer in $PRINTERS; do
         nvals=$(wc -w <<< "$vals")
         towerh=$(python3 -c "print($nvals * $RETR_BAND)")
         STL="calibration/retraction_pillars.stl"
-        (cd scripts && python3 make_test_shapes.py pillars --out "../$STL" --height "$towerh") 2>/dev/null
+        (cd scripts && python3 make_test_shapes.py pillars --out "../$STL" \
+            --height "$towerh" --bands "$nvals") 2>/dev/null
 
         # Slice ONCE at a known retraction with wipe off, then rescale the
         # retraction moves per band. Wipe must be off: with it on a retraction

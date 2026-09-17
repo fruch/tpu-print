@@ -277,6 +277,76 @@ Work through [CALIBRATION.md](CALIBRATION.md), fill the values in, re-run.
 
 ---
 
+## Working on the model itself
+
+### Painted supports, without the mouse
+
+Orca stores painted supports as a `paint_supports` attribute on each triangle
+in the 3mf. `paint_supports.py` writes them directly, so the overhang scan that
+*finds* the problem areas can also *mark* them:
+
+```bash
+python3 scripts/paint_supports.py part.3mf --angle 55 --min-z 8 --max-z 45 --x-band 5
+```
+
+The project must already be on a **manual** support type (`tree(manual)`),
+or Orca adds automatic supports on top and the painting changes nothing.
+
+Bound the region hard. Painting every overhang on this model took the print
+from 10 h to **23 h** — tree branches filled the whole cleft for its full 96 mm.
+A ±5 mm strip down the centre costs 2 h.
+
+### A GUI save silently destroys the project's settings
+
+Saving a project in Orca writes whichever presets the GUI has selected, not the
+ones the project was exported with. Rotating a model and hitting save was enough
+to replace 205 °C with 240 °C, flow 1.10 with 1.0, retraction 4 mm with 0.4 mm,
+4% infill with 15%, turn support off, and empty `layer_change_gcode` — losing
+the `G92 E0` the Ender cannot slice without. The painting and the rotation
+survive, so it looks like only support went missing.
+
+```bash
+python3 scripts/apply_profile_to_3mf.py model/*_paint.3mf   # run after any GUI save
+```
+
+### Test pieces, so a change does not cost a day
+
+```bash
+blender --background --python scripts/crop_model.py -- \
+    model/bottom_clean.stl model/test.stl  84 120  20 55  0 46
+```
+
+A boolean crop of the real geometry. The valley crop above is **1 h** and holds
+6.1 cm² of the model's severe overhang; widening it to `55 150 0 80 0 50` gives
+**3 h 19 m** and 69% of it. Beats iterating on a 12-hour print.
+
+### Chamfering a cut face: use FreeCAD, not Blender
+
+`bevel_model.py` (Blender) is kept for reference but **do not use it**. Edge
+bevel cannot work on a dense triangulated scan: the boundary is thousands of
+sub-millimetre edges whose offsets overlap. With `clamp_overlap` on it collapses
+to nothing — the mesh gains 8500 faces and loses zero material; with it off it
+throws spikes 4.4 mm outside the model. Voxel remeshing first made it worse
+(non-watertight, thousands of spikes).
+
+`chamfer_freecad.py` builds the chamfer as geometry instead — section the solid
+at height *d*, offset that outline inward by *d* in 2D, loft between the two.
+A 2D wire offset is well-conditioned on an organic outline where a 3D edge
+bevel is not.
+
+```bash
+CF_IN=model/bottom_clean.stl CF_OUT=model/bottom_clean_chamfer.stl CF_WIDTH=5 \
+    ~/Downloads/FreeCAD*.AppImage --console scripts/chamfer_freecad.py
+```
+
+5 mm, watertight, **zero** spikes, and fewer triangles than the input. Use
+`join=0` (arcs) for the offset: `join=2` (intersection) returns a null shape
+where the outline has tight concave curvature.
+
+Currently chamfers the **bottom plane only**.
+
+---
+
 ## Third-party content
 
 `calibration/first_layer.3mf` is a first-layer calibration patch that came from
