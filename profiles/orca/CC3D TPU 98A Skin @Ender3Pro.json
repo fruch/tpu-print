@@ -12,16 +12,16 @@
   "Direct Drive Standard"
  ],
  "filament_flow_ratio": [
-  "1"
+  "1.1"
  ],
  "filament_max_volumetric_speed": [
-  "3.2"
+  "5.5"
  ],
  "filament_notes": [
-  "CC3D TPU 98A 340M, skin color, 1.75mm. Creality Ender-3 Pro (BOWDEN).\n\nVendor sheet: nozzle 195-215C, bed 0-60C.\n\n=== PENDING - fill in after physical calibration ===\nnozzle_temperature            215   PENDING  <- temp tower 200-235C / 5C steps\nfilament_flow_ratio           1.0   PENDING  <- flow pass1 then pass2\nfilament_max_volumetric_speed 3.2   PENDING  <- expect 2-3 mm3/s on Bowden\nfilament_retraction_length    2.5   PENDING  <- retraction tower, expect 2-3mm @ 25mm/s\n                                              2.5 is a sane Bowden-TPU START so the temp\n                                              tower is readable; the machine default 4mm\n                                              is a PLA value and makes TPU string badly.\npressure advance                    SKIP     <- stock Creality 4.2.2 Marlin has LIN_ADVANCE off\n\nValues above are generic/vendor starting points, NOT measured. Do not trust\nestimates from these until the PENDING lines are replaced with real numbers.\n\nfilament_density 1.21 g/cm3 is the generic polyester-TPU figure, not a CC3D\npublished spec. It only scales the 'filament used [g]' estimate. Weigh a\nprinted part and correct it if the gram numbers matter to you.\nfilament_cost 25 is a placeholder - set your actual spool price."
+  "CC3D TPU 98A 340M, skin color, 1.75mm. Creality Ender-3 Pro (BOWDEN).\n\nVendor sheet: nozzle 195-215C, bed 0-60C.\n\n=== calibrated 2026-09-15 on CC3D TPU 98A, Ender 3 Pro ===\nnozzle_temperature            205   CHOSEN 2026-09-15 <- 200 measured dramatically cleaner\n                                              than 215 on the retraction tower, but the part is\n                                              squeezed repeatedly and layer adhesion falls with\n                                              temperature. 205 splits the difference: keeps most\n                                              of the stringing win, buys back some bond strength.\n                                      (measured) 200 clean / 215 heavy stringing 2026-09-14 <- temp tower 225-195C: every band\n                                              printed equally well, no sag on any ramp. Orca's\n                                              rule for a uniformly good range is take the middle\n                                              (210), or the HIGH end when printing at raised flow\n                                              rates - which we are. 215 is also the vendor ceiling.\nfilament_flow_ratio           1.10  MEASURED 2026-09-14 <- flow staircase, step 5 of 6.\n                                              115% was rejected as over-extruded, so the\n                                              optimum is bracketed, not clipped by the range.\nfilament_max_volumetric_speed 5.5   MEASURED 2026-09-15 <- max flow tower swept 2.0-7.0 mm3/s\n                                              and never degraded, so the extruder keeps up to at\n                                              least 7. Set to 5.5 for margin. Checked the test was\n                                              capable of proving it: at 500 mm/s2 a 39mm part\n                                              reaches 140 mm/s, and 7 mm3/s only needs 83 mm/s.\nfilament_retraction_length    4.0   MEASURED 2026-09-15 <- anti-string tower, band 4 of 6.\n                                              Shortest band with a clean gap.\n                                              2.5 is a sane Bowden-TPU START so the temp\n                                              tower is readable; the machine default 4mm\n                                              is a PLA value and makes TPU string badly.\npressure advance                    SKIP     <- stock Creality 4.2.2 Marlin has LIN_ADVANCE off\n\nValues above are generic/vendor starting points, NOT measured. Do not trust\nestimates from these until the PENDING lines are replaced with real numbers.\n\nfilament_density 1.21 g/cm3 is the generic polyester-TPU figure, not a CC3D\npublished spec. It only scales the 'filament used [g]' estimate. Weigh a\nprinted part and correct it if the gram numbers matter to you.\nfilament_cost 25 is a placeholder - set your actual spool price.\n\nAnti-stringing set, validated 2026-09-15 by printing the same retraction tower\ntwice. Left/old: 215C, travel 80, z-hop 0.4, wipe on -> the gap filled with a\nsolid curtain. Right/new: 200C, travel 150, z-hop off, wipe off -> mostly clear.\nFour changes at once, so no attribution between them; the combination is what\nwas tested and what should be kept together.\ntravel_speed lives in run.sh/calibrate.sh, not here."
  ],
  "filament_retraction_length": [
-  "2.5"
+  "4"
  ],
  "filament_retraction_speed": [
   "25"
@@ -36,10 +36,10 @@
   "CC3D"
  ],
  "filament_wipe": [
-  "1"
+  "0"
  ],
  "filament_z_hop": [
-  "0.4"
+  "0"
  ],
  "filament_z_hop_types": [
   "Normal Lift"
@@ -54,10 +54,10 @@
  "inherits": "Generic TPU @System",
  "name": "CC3D TPU 98A Skin @Ender3Pro",
  "nozzle_temperature": [
-  "215"
+  "205"
  ],
  "nozzle_temperature_initial_layer": [
-  "215"
+  "205"
  ],
  "type": "filament",
  "version": "2.4.0.2"

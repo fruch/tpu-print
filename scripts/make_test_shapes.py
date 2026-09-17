@@ -22,13 +22,29 @@ import sys
 from make_temp_tower import box, write_stl
 
 
-def pillars(size=10.0, gap=15.0, height=25.0, base=1.2, overhang=2.0):
+def pillars(size=10.0, gap=15.0, height=25.0, base=1.2, overhang=2.0, bands=0):
+    """Two pillars with a gap; strings show in the gap.
+
+    With `bands` set, each band steps inward 0.8mm so the boundaries are
+    visible and countable. Without markers you cannot tell which section of a
+    retraction tower you are looking at, which makes the print unreadable.
+    """
     width = size * 2 + gap
     o = overhang
+    ov = 0.02
     tris = []
     tris += box(-o, -o, 0, width + o, size + o, base)
-    tris += box(0, 0, 0, size, size, base + height)
-    tris += box(size + gap, 0, 0, width, size, base + height)
+    if bands and bands > 1:
+        bh = height / bands
+        for i in range(bands):
+            z0 = base + i * bh
+            z1 = z0 + bh + ov
+            d = size - i * 0.8                    # visible step per band
+            tris += box(0, 0, z0, size, d, z1)
+            tris += box(size + gap, 0, z0, width, d, z1)
+    else:
+        tris += box(0, 0, 0, size, size, base + height)
+        tris += box(size + gap, 0, 0, width, size, base + height)
     return tris, (width + 2 * o, size + 2 * o, base + height)
 
 
@@ -139,13 +155,14 @@ def main():
     ap.add_argument("--height", type=float, default=None)
     ap.add_argument("--size", type=float, default=50.0, help="coupon XY size")
     ap.add_argument("--radius", type=float, default=12.0, help="rbox corner radius")
+    ap.add_argument("--bands", type=int, default=0, help="pillars: step each band for visibility")
     ap.add_argument("--aspect-from", default=None,
                     help="an STL to copy X:Y proportions from, so the coupon "
                          "has the real part's footprint shape")
     a = ap.parse_args()
 
     if a.shape == "pillars":
-        tris, dims = pillars(height=a.height if a.height else 25.0)
+        tris, dims = pillars(height=a.height if a.height else 25.0, bands=a.bands)
     elif a.shape == "block":
         tris, dims = block(x=a.size, y=a.size, z=a.height if a.height else 30.0)
     elif a.shape == "rbox":
